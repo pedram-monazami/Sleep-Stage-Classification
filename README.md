@@ -1,4 +1,4 @@
-# Modular Sleep Stage Classification Framework
+# Sleep Stage Classification Framework
 
 This repository contains a robust and configurable framework for training and evaluating deep learning models for sleep stage classification. It is designed to work with pre-processed CWT (Continuous Wavelet Transform) and WSST (Wavelet Synchrosqueezed Transform) images derived from sleep EDF data. The framework is built with PyTorch and is designed to be modular, reusable, and easily extensible for various models and research experiments.
 
