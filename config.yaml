@@ -1,0 +1,81 @@
+# --- Experiment ---
+experiment_name: SingleViT
+description: Single branch ViT with input of concatenated CWT and WSST images.
+mode: train  # "train" or "eval"
+seed: 42
+device: cuda  # "auto", "cuda", or "cpu"
+
+# --- Paths ---
+# Directory containing cwt.csv and wsst.csv
+data_dir: ./data
+# Directory where normalization stats (.npy files) are stored
+normalization_stats_dir: ./data/normalization
+# Main output directory for this experiment
+output_dir: outputs/SingleViT
+
+# --- Data ---
+data:
+  # This name will be used by the dataset factory. Options: "Single", "Dual", "DualConcat", "SequencedDual"
+  dataset_type: DualConcat
+  # Subject split files for cross-validation or fixed splits
+  subject_split_csv: ./data/10fold_train_val_subjects.csv # For CV train/val splits
+  test_subjects_csv: ./data/10fold_test_subjects.csv # For final test set (used in 'eval' mode)
+  # Dataloader params
+  batch_size: 16
+  num_workers: 4
+  # Balanced sampling for training set
+  balanced_subset_training: true
+  samples_per_class: 1000 # "min_class" or an integer
+
+# --- Model ---
+model:
+  # This name will be used by the model factory.
+  name: SingleViT
+  # Path to the checkpoint file for resuming training or for evaluation
+  resume_from_checkpoint: null # e.g., outputs/SingleViT/cv_fold_1/checkpoints/epoch_12.pt
+  class_names: [ "Wake", "N1", "N2", "N3", "REM" ]
+  # Model-specific parameters (passed to the model's __init__)
+  params:
+    num_classes: 5
+
+# --- Training ---
+training:
+  epochs: 100
+  optimizer: AdamW
+  initial_lr: 0.0001
+  weight_decay: 0.0001
+  # Loss function
+  loss_function: CrossEntropyLoss # CrossEntropyLoss, FocalLoss
+  class_weights: false
+  dynamic_class_weighting: true
+  dynamic_class_weighting_base: val  # "train" or "val"
+  focal_loss_gamma: 2.0
+  # Scheduler
+  scheduler: ReduceLROnPlateau # or StepLR, CosineAnnealingLR
+  scheduler_patience: 2
+  scheduler_factor: 0.5
+  step_size: 10
+
+# --- Cross Validation ---
+cross_validation:
+  enabled: true
+  num_folds: 10
+  run_fold: -1  # -1 to run all folds, or a specific 1-indexed fold number
+
+# --- Early Stopping ---
+early_stopping:
+  enabled: true
+  patience: 20
+  metric: val_f1 # Metric to monitor (e.g., val_loss, val_f1)
+  min_delta: 0.001
+
+# --- Logging ---
+logging:
+  # Verbosity level for console output
+  # 0: silent, 1: info, 2: metrics, 3: debug
+  verbose: 3
+  # Whether to save a checkpoint file after each epoch
+  save_each_epoch: true
+  # Whether to save per-class loss (can be slow)
+  save_loss_per_class_val: false
+  save_loss_per_class_train: false
